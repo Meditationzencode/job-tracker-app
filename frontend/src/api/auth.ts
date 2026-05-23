@@ -1,9 +1,9 @@
-import client from "./client";
+import client, { API_ORIGIN } from "./client";
 import axios from "axios";
 import type { AuthTokens, LoginCredentials, RegisterData, User } from "@/types";
 
 export async function login(credentials: LoginCredentials): Promise<AuthTokens> {
-  const { data } = await axios.post<AuthTokens>("/api/auth/token/", credentials);
+  const { data } = await axios.post<AuthTokens>(`${API_ORIGIN}/api/auth/token/`, credentials);
   localStorage.setItem("access_token", data.access);
   localStorage.setItem("refresh_token", data.refresh);
   return data;
