@@ -8,22 +8,36 @@ const ALL_STATUSES: JobStatus[] = [
   "wishlist", "applied", "phone_screen", "interview", "offer", "rejected", "withdrawn", "accepted",
 ];
 
+const SORT_OPTIONS = [
+  { value: "-created_at", label: "Newest first" },
+  { value: "created_at", label: "Oldest first" },
+  { value: "-date_applied", label: "Recently applied" },
+  { value: "deadline", label: "Deadline (soonest)" },
+  { value: "company", label: "Company A–Z" },
+  { value: "status", label: "Status" },
+];
+
 export default function Jobs() {
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [ordering, setOrdering] = useState("-created_at");
 
   function fetchJobs() {
     setLoading(true);
-    listJobs({ search: search || undefined, status: statusFilter || undefined })
+    listJobs({
+      search: search || undefined,
+      status: statusFilter || undefined,
+      ordering,
+    })
       .then((res) => setJobs(res.results))
       .finally(() => setLoading(false));
   }
 
   useEffect(() => {
     fetchJobs();
-  }, [search, statusFilter]);
+  }, [search, statusFilter, ordering]);
 
   return (
     <div className="space-y-6">
@@ -37,13 +51,13 @@ export default function Jobs() {
         </Link>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <input
           type="search"
           placeholder="Search company or title..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+          className="flex-1 min-w-[200px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
         />
         <select
           value={statusFilter}
@@ -54,6 +68,17 @@ export default function Jobs() {
           {ALL_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s.replace("_", " ")}
+            </option>
+          ))}
+        </select>
+        <select
+          value={ordering}
+          onChange={(e) => setOrdering(e.target.value)}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+        >
+          {SORT_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
