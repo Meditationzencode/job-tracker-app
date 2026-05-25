@@ -1,4 +1,6 @@
+import csv
 from datetime import timedelta
+from django.http import StreamingHttpResponse
 from django.utils import timezone
 from django.db.models import Count, Q
 from rest_framework import viewsets, permissions, filters
@@ -7,6 +9,13 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Job, Interview, Contact
 from .serializers import JobSerializer, JobListSerializer, InterviewSerializer, ContactSerializer
+
+
+class _Echo:
+    """Pseudo file-like object used by csv.writer to stream rows."""
+
+    def write(self, value):
+        return value
 
 
 class IsOwner(permissions.BasePermission):
@@ -66,6 +75,49 @@ class ContactViewSet(viewsets.ModelViewSet):
         if job.user != self.request.user:
             raise permissions.PermissionDenied
         serializer.save()
+
+
+class JobCsvExportView(APIView):
+    """Stream the authenticated user's jobs as a CSV download."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    HEADERS = [
+        "company", "title", "location", "remote", "status",
+        "salary_min", "salary_max", "date_applied", "deadline",
+        "cv_version", "cover_letter_version",
+        "url", "archived", "notes", "created_at",
+    ]
+
+    def get(self, request):
+        jobs = Job.objects.filter(user=request.user).order_by("-created_at")
+
+        def row_iter():
+            writer = csv.writer(_Echo())
+            yield writer.writerow(self.HEADERS)
+            for job in jobs:
+                yield writer.writerow([
+                    job.company,
+                    job.title,
+                    job.location,
+                    "yes" if job.remote else "no",
+                    job.get_status_display(),
+                    job.salary_min if job.salary_min is not None else "",
+                    job.salary_max if job.salary_max is not None else "",
+                    job.date_applied.isoformat() if job.date_applied else "",
+                    job.deadline.isoformat() if job.deadline else "",
+                    job.cv_version,
+                    job.cover_letter_version,
+                    job.url,
+                    "yes" if job.archived else "no",
+                    job.notes.replace("\n", " ") if job.notes else "",
+                    job.created_at.isoformat(),
+                ])
+
+        filename = f"job-tracker-export-{timezone.now().date().isoformat()}.csv"
+        response = StreamingHttpResponse(row_iter(), content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
 
 class DashboardView(APIView):

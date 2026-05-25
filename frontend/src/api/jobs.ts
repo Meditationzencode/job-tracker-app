@@ -6,6 +6,18 @@ export async function getDashboard(): Promise<DashboardData> {
   return data;
 }
 
+export async function downloadJobsCsv(): Promise<void> {
+  const response = await client.get("/jobs/export/", { responseType: "blob" });
+  const url = URL.createObjectURL(response.data);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `job-tracker-export-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 export interface JobFilters {
   status?: string;
   remote?: boolean;

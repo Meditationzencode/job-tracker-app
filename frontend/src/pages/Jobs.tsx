@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { listJobs } from "@/api/jobs";
+import { listJobs, downloadJobsCsv } from "@/api/jobs";
 import { daysSince, relativeDays } from "@/utils/date";
+import { useToast } from "@/context/ToastContext";
 import type { JobListItem, JobStatus } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -18,12 +19,26 @@ const SORT_OPTIONS = [
 ];
 
 export default function Jobs() {
+  const { notify } = useToast();
   const [jobs, setJobs] = useState<JobListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [ordering, setOrdering] = useState("-created_at");
   const [showArchived, setShowArchived] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadJobsCsv();
+      notify("CSV exported");
+    } catch {
+      notify("Export failed", "error");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   function fetchJobs() {
     setLoading(true);
@@ -45,12 +60,21 @@ export default function Jobs() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-        <Link
-          to="/jobs/new"
-          className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
-        >
-          + Add job
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={exporting || jobs.length === 0}
+            className="text-sm text-gray-600 hover:text-gray-900 font-medium disabled:opacity-50"
+          >
+            {exporting ? "Exporting..." : "Export CSV"}
+          </button>
+          <Link
+            to="/jobs/new"
+            className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded-lg"
+          >
+            + Add job
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3">
