@@ -24,6 +24,19 @@ export default function Login() {
     }
   }
 
+  async function handleDemo() {
+    setError("");
+    setLoading(true);
+    try {
+      await login({ email: "demo@example.com", password: "demopass123" });
+      navigate("/");
+    } catch {
+      setError("Demo account not available on this server yet.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -62,6 +75,21 @@ export default function Login() {
             {loading ? "Signing in..." : "Sign in"}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-3 text-xs text-gray-400">
+          <div className="flex-1 h-px bg-gray-200" />
+          or
+          <div className="flex-1 h-px bg-gray-200" />
+        </div>
+
+        <button
+          onClick={handleDemo}
+          disabled={loading}
+          className="w-full border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-2 rounded-lg text-sm disabled:opacity-50"
+        >
+          Try the demo
+        </button>
+
         <p className="mt-4 text-sm text-gray-500 text-center">
           No account?{" "}
           <Link to="/register" className="text-brand-600 font-medium hover:underline">

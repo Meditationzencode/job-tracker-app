@@ -40,6 +40,7 @@ pip install -r requirements.txt
 cp .env.example .env            # fill in SECRET_KEY
 python manage.py migrate
 python manage.py createsuperuser
+python manage.py seed_demo      # optional: create demo@example.com / demopass123
 python manage.py runserver
 ```
 
