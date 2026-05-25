@@ -77,6 +77,17 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface DashboardData {
+  totals: {
+    total: number;
+    active: number;
+  };
+  status_counts: Partial<Record<JobStatus, number>>;
+  upcoming_interviews: Interview[];
+  approaching_deadlines: JobListItem[];
+  recent_jobs: JobListItem[];
+}
+
 export interface AuthTokens {
   access: string;
   refresh: string;

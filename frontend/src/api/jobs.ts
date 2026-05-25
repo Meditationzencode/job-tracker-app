@@ -1,5 +1,10 @@
 import client from "./client";
-import type { Job, JobListItem, Interview, Contact, PaginatedResponse } from "@/types";
+import type { Job, JobListItem, Interview, Contact, PaginatedResponse, DashboardData } from "@/types";
+
+export async function getDashboard(): Promise<DashboardData> {
+  const { data } = await client.get<DashboardData>("/dashboard/");
+  return data;
+}
 
 export interface JobFilters {
   status?: string;
