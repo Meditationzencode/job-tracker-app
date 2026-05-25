@@ -61,6 +61,7 @@ export interface Job {
   notes: string;
   date_applied: string | null;
   deadline: string | null;
+  archived: boolean;
   interviews: Interview[];
   contacts: Contact[];
   created_at: string;
@@ -68,7 +69,7 @@ export interface Job {
 }
 
 export interface JobListItem
-  extends Pick<Job, "id" | "company" | "title" | "location" | "remote" | "status" | "date_applied" | "deadline" | "created_at"> {}
+  extends Pick<Job, "id" | "company" | "title" | "location" | "remote" | "status" | "date_applied" | "deadline" | "archived" | "created_at"> {}
 
 export interface PaginatedResponse<T> {
   count: number;

@@ -9,6 +9,7 @@ export async function getDashboard(): Promise<DashboardData> {
 export interface JobFilters {
   status?: string;
   remote?: boolean;
+  archived?: boolean;
   search?: string;
   ordering?: string;
   page?: number;

@@ -18,14 +18,18 @@ class IsOwner(permissions.BasePermission):
 class JobViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwner]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ["status", "remote"]
+    filterset_fields = ["status", "remote", "archived"]
     search_fields = ["company", "title", "location"]
-    ordering_fields = ["created_at", "date_applied", "deadline", "company"]
+    ordering_fields = ["created_at", "date_applied", "deadline", "company", "status"]
 
     def get_queryset(self):
-        return Job.objects.filter(user=self.request.user).prefetch_related(
+        qs = Job.objects.filter(user=self.request.user).prefetch_related(
             "interviews", "contacts"
         )
+        # Hide archived jobs unless explicitly requested
+        if self.request.query_params.get("archived") not in ("true", "1"):
+            qs = qs.filter(archived=False)
+        return qs
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -74,7 +78,7 @@ class DashboardView(APIView):
         now = timezone.now()
         soon = now + timedelta(days=14)
 
-        jobs = Job.objects.filter(user=user)
+        jobs = Job.objects.filter(user=user, archived=False)
         status_counts = dict(
             jobs.values_list("status").annotate(c=Count("id"))
         )

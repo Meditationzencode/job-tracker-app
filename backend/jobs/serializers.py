@@ -28,7 +28,7 @@ class JobSerializer(serializers.ModelSerializer):
         fields = (
             "id", "company", "title", "location", "remote", "url",
             "description", "status", "salary_min", "salary_max",
-            "notes", "date_applied", "deadline",
+            "notes", "date_applied", "deadline", "archived",
             "interviews", "contacts",
             "created_at", "updated_at",
         )
@@ -42,6 +42,6 @@ class JobListSerializer(serializers.ModelSerializer):
         model = Job
         fields = (
             "id", "company", "title", "location", "remote",
-            "status", "date_applied", "deadline", "created_at",
+            "status", "date_applied", "deadline", "archived", "created_at",
         )
         read_only_fields = ("id", "created_at")

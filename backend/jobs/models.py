@@ -29,6 +29,7 @@ class Job(models.Model):
     notes = models.TextField(blank=True)
     date_applied = models.DateField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
+    archived = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

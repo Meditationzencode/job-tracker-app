@@ -23,6 +23,7 @@ export default function Jobs() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [ordering, setOrdering] = useState("-created_at");
+  const [showArchived, setShowArchived] = useState(false);
 
   function fetchJobs() {
     setLoading(true);
@@ -30,6 +31,7 @@ export default function Jobs() {
       search: search || undefined,
       status: statusFilter || undefined,
       ordering,
+      archived: showArchived || undefined,
     })
       .then((res) => setJobs(res.results))
       .finally(() => setLoading(false));
@@ -37,7 +39,7 @@ export default function Jobs() {
 
   useEffect(() => {
     fetchJobs();
-  }, [search, statusFilter, ordering]);
+  }, [search, statusFilter, ordering, showArchived]);
 
   return (
     <div className="space-y-6">
@@ -82,6 +84,15 @@ export default function Jobs() {
             </option>
           ))}
         </select>
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+            className="rounded border-gray-300 text-brand-600 focus:ring-brand-500"
+          />
+          Show archived
+        </label>
       </div>
 
       {loading ? (

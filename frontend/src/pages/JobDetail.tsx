@@ -57,8 +57,13 @@ export default function JobDetail() {
     setJob(await updateJob(job.id, { status }));
   }
 
+  async function handleArchiveToggle() {
+    if (!job) return;
+    setJob(await updateJob(job.id, { archived: !job.archived }));
+  }
+
   async function handleDelete() {
-    if (!job || !confirm("Delete this job?")) return;
+    if (!job || !confirm("Delete this job permanently? Use Archive to hide instead.")) return;
     await deleteJob(job.id);
     navigate("/jobs");
   }
@@ -100,7 +105,14 @@ export default function JobDetail() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
+            {job.archived && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                Archived
+              </span>
+            )}
+          </div>
           <p className="text-gray-500 mt-1">
             {job.company}
             {job.location ? ` · ${job.location}` : ""}
@@ -114,6 +126,12 @@ export default function JobDetail() {
           >
             Edit
           </Link>
+          <button
+            onClick={handleArchiveToggle}
+            className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+          >
+            {job.archived ? "Unarchive" : "Archive"}
+          </button>
           <button
             onClick={handleDelete}
             className="text-sm text-red-600 hover:text-red-700 font-medium"
