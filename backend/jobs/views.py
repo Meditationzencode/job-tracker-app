@@ -135,6 +135,17 @@ class DashboardView(APIView):
             jobs.values_list("status").annotate(c=Count("id"))
         )
 
+        # Weekly application counts for the last 8 weeks
+        weeks = []
+        today = now.date()
+        for i in range(7, -1, -1):
+            week_end = today - timedelta(days=i * 7)
+            week_start = week_end - timedelta(days=6)
+            count = jobs.filter(
+                date_applied__gte=week_start, date_applied__lte=week_end
+            ).count()
+            weeks.append({"week_start": week_start.isoformat(), "count": count})
+
         upcoming_interviews = (
             Interview.objects.filter(job__user=user, completed=False, scheduled_at__gte=now)
             .order_by("scheduled_at")[:5]
@@ -154,6 +165,7 @@ class DashboardView(APIView):
                 ).count(),
             },
             "status_counts": status_counts,
+            "weekly_applications": weeks,
             "upcoming_interviews": InterviewSerializer(upcoming_interviews, many=True).data,
             "approaching_deadlines": JobListSerializer(approaching_deadlines, many=True).data,
             "recent_jobs": JobListSerializer(recent_jobs, many=True).data,

@@ -81,12 +81,18 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+export interface WeeklyApplicationPoint {
+  week_start: string;
+  count: number;
+}
+
 export interface DashboardData {
   totals: {
     total: number;
     active: number;
   };
   status_counts: Partial<Record<JobStatus, number>>;
+  weekly_applications: WeeklyApplicationPoint[];
   upcoming_interviews: Interview[];
   approaching_deadlines: JobListItem[];
   recent_jobs: JobListItem[];

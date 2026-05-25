@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboard } from "@/api/jobs";
 import { daysSince, relativeDays } from "@/utils/date";
+import StatusBreakdown from "@/components/StatusBreakdown";
+import WeeklyChart from "@/components/WeeklyChart";
 import type { DashboardData, JobStatus } from "@/types";
 
 const STATUS_COLORS: Record<JobStatus, string> = {
@@ -53,6 +55,16 @@ export default function Dashboard() {
             </p>
           </div>
         ))}
+      </div>
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Panel title="Status breakdown" emptyText="No applications yet.">
+          <StatusBreakdown counts={data.status_counts} />
+        </Panel>
+        <Panel title="Applications over time" emptyText="No applications yet.">
+          <WeeklyChart data={data.weekly_applications} />
+        </Panel>
       </div>
 
       {/* Upcoming interviews + deadlines side-by-side */}
