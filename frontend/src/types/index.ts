@@ -38,6 +38,7 @@ export interface Interview {
 
 export interface Contact {
   id: number;
+  job: number;
   name: string;
   title: string;
   email: string;

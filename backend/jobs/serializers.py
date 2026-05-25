@@ -5,7 +5,7 @@ from .models import Job, Interview, Contact
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = ("id", "name", "title", "email", "phone", "linkedin", "notes", "created_at")
+        fields = ("id", "job", "name", "title", "email", "phone", "linkedin", "notes", "created_at")
         read_only_fields = ("id", "created_at")
 
 

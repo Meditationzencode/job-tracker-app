@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { getJob, deleteJob, updateJob, createInterview, updateInterview, deleteInterview } from "@/api/jobs";
 import { daysSince, relativeDays } from "@/utils/date";
 import { useToast } from "@/context/ToastContext";
+import ContactsSection from "@/components/ContactsSection";
 import type { Job, JobStatus, InterviewType } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -388,6 +389,9 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Contacts */}
+      <ContactsSection jobId={job.id} contacts={job.contacts} onChange={refresh} />
     </div>
   );
 }
