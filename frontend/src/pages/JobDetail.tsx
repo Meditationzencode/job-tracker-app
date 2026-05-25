@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getJob, deleteJob, updateJob, createInterview, updateInterview, deleteInterview } from "@/api/jobs";
+import { daysSince, relativeDays } from "@/utils/date";
 import type { Job, JobStatus, InterviewType } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -171,6 +172,7 @@ export default function JobDetail() {
                 <p className="text-sm font-medium text-gray-700">Applied</p>
                 <p className="text-sm text-gray-600">
                   {new Date(job.date_applied).toLocaleDateString()}
+                  <span className="text-gray-400"> · {relativeDays(daysSince(job.date_applied) ?? 0)}</span>
                 </p>
               </div>
             )}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { listJobs } from "@/api/jobs";
+import { daysSince, relativeDays } from "@/utils/date";
 import type { JobListItem, JobStatus } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -84,7 +85,7 @@ export default function Jobs() {
                 </span>
                 {job.date_applied && (
                   <p className="text-xs text-gray-400 mt-0.5">
-                    Applied {new Date(job.date_applied).toLocaleDateString()}
+                    Applied {relativeDays(daysSince(job.date_applied) ?? 0)}
                   </p>
                 )}
               </div>
