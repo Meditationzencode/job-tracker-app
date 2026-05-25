@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { getJob, deleteJob, updateJob, createInterview, updateInterview, deleteInterview } from "@/api/jobs";
 import { daysSince, relativeDays } from "@/utils/date";
+import { useToast } from "@/context/ToastContext";
 import type { Job, JobStatus, InterviewType } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -34,6 +35,7 @@ const EMPTY_DRAFT: InterviewDraft = {
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { notify } = useToast();
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -55,16 +57,20 @@ export default function JobDetail() {
   async function handleStatusChange(status: JobStatus) {
     if (!job) return;
     setJob(await updateJob(job.id, { status }));
+    notify(`Status updated to "${status.replace("_", " ")}"`);
   }
 
   async function handleArchiveToggle() {
     if (!job) return;
-    setJob(await updateJob(job.id, { archived: !job.archived }));
+    const updated = await updateJob(job.id, { archived: !job.archived });
+    setJob(updated);
+    notify(updated.archived ? "Job archived" : "Job unarchived");
   }
 
   async function handleDelete() {
     if (!job || !confirm("Delete this job permanently? Use Archive to hide instead.")) return;
     await deleteJob(job.id);
+    notify("Job deleted");
     navigate("/jobs");
   }
 
@@ -77,6 +83,9 @@ export default function JobDetail() {
       setDraft(EMPTY_DRAFT);
       setShowForm(false);
       await refresh();
+      notify("Interview added");
+    } catch {
+      notify("Could not add interview", "error");
     } finally {
       setSavingInterview(false);
     }
@@ -85,12 +94,14 @@ export default function JobDetail() {
   async function handleToggleComplete(interviewId: number, completed: boolean) {
     await updateInterview(interviewId, { completed });
     await refresh();
+    notify(completed ? "Interview marked complete" : "Interview reopened");
   }
 
   async function handleDeleteInterview(interviewId: number) {
     if (!confirm("Remove this interview?")) return;
     await deleteInterview(interviewId);
     await refresh();
+    notify("Interview removed");
   }
 
   if (loading) return <p className="text-gray-500">Loading...</p>;

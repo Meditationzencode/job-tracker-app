@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createJob, getJob, updateJob } from "@/api/jobs";
+import { useToast } from "@/context/ToastContext";
 import type { Job, JobStatus } from "@/types";
 
 const ALL_STATUSES: JobStatus[] = [
@@ -83,6 +84,7 @@ export default function JobForm() {
   const { id } = useParams<{ id: string }>();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const { notify } = useToast();
 
   const [form, setForm] = useState<FormState>(EMPTY);
   const [loading, setLoading] = useState(isEdit);
@@ -113,9 +115,11 @@ export default function JobForm() {
       const saved = isEdit
         ? await updateJob(Number(id), payload)
         : await createJob(payload);
+      notify(isEdit ? "Changes saved" : "Job added");
       navigate(`/jobs/${saved.id}`);
     } catch {
       setError("Something went wrong. Please check your inputs and try again.");
+      notify("Save failed", "error");
     } finally {
       setSaving(false);
     }
