@@ -27,6 +27,8 @@ class Job(models.Model):
     salary_min = models.PositiveIntegerField(null=True, blank=True)
     salary_max = models.PositiveIntegerField(null=True, blank=True)
     notes = models.TextField(blank=True)
+    cv_version = models.CharField(max_length=100, blank=True)
+    cover_letter_version = models.CharField(max_length=100, blank=True)
     date_applied = models.DateField(null=True, blank=True)
     deadline = models.DateField(null=True, blank=True)
     archived = models.BooleanField(default=False)

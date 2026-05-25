@@ -20,6 +20,8 @@ type FormState = {
   deadline: string;
   notes: string;
   description: string;
+  cv_version: string;
+  cover_letter_version: string;
 };
 
 const EMPTY: FormState = {
@@ -35,6 +37,8 @@ const EMPTY: FormState = {
   deadline: "",
   notes: "",
   description: "",
+  cv_version: "",
+  cover_letter_version: "",
 };
 
 function jobToForm(job: Job): FormState {
@@ -51,6 +55,8 @@ function jobToForm(job: Job): FormState {
     deadline: job.deadline ?? "",
     notes: job.notes,
     description: job.description,
+    cv_version: job.cv_version,
+    cover_letter_version: job.cover_letter_version,
   };
 }
 
@@ -68,6 +74,8 @@ function formToPayload(f: FormState): Partial<Job> {
     deadline: f.deadline || null,
     notes: f.notes,
     description: f.description,
+    cv_version: f.cv_version,
+    cover_letter_version: f.cover_letter_version,
   };
 }
 
@@ -239,6 +247,28 @@ export default function JobForm() {
               onChange={handleChange}
               className={inputCls}
               placeholder="90000"
+            />
+          </Field>
+        </div>
+
+        {/* Application materials */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field label="CV / resume version">
+            <input
+              name="cv_version"
+              value={form.cv_version}
+              onChange={handleChange}
+              className={inputCls}
+              placeholder="Resume v3 — backend focus"
+            />
+          </Field>
+          <Field label="Cover letter version">
+            <input
+              name="cover_letter_version"
+              value={form.cover_letter_version}
+              onChange={handleChange}
+              className={inputCls}
+              placeholder="Cover letter v2"
             />
           </Field>
         </div>

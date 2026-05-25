@@ -205,6 +205,23 @@ export default function JobDetail() {
           </div>
         )}
 
+        {(job.cv_version || job.cover_letter_version) && (
+          <div className="flex gap-6">
+            {job.cv_version && (
+              <div>
+                <p className="text-sm font-medium text-gray-700">CV / resume</p>
+                <p className="text-sm text-gray-600">{job.cv_version}</p>
+              </div>
+            )}
+            {job.cover_letter_version && (
+              <div>
+                <p className="text-sm font-medium text-gray-700">Cover letter</p>
+                <p className="text-sm text-gray-600">{job.cover_letter_version}</p>
+              </div>
+            )}
+          </div>
+        )}
+
         {job.notes && (
           <div>
             <p className="text-sm font-medium text-gray-700 mb-1">Notes</p>

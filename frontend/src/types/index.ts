@@ -59,6 +59,8 @@ export interface Job {
   salary_min: number | null;
   salary_max: number | null;
   notes: string;
+  cv_version: string;
+  cover_letter_version: string;
   date_applied: string | null;
   deadline: string | null;
   archived: boolean;

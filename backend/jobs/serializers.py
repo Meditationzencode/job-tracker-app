@@ -28,7 +28,8 @@ class JobSerializer(serializers.ModelSerializer):
         fields = (
             "id", "company", "title", "location", "remote", "url",
             "description", "status", "salary_min", "salary_max",
-            "notes", "date_applied", "deadline", "archived",
+            "notes", "cv_version", "cover_letter_version",
+            "date_applied", "deadline", "archived",
             "interviews", "contacts",
             "created_at", "updated_at",
         )
