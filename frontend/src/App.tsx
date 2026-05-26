@@ -6,6 +6,7 @@ import Dashboard from "@/pages/Dashboard";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/JobDetail";
 import JobForm from "@/pages/JobForm";
+import NotFound from "@/pages/NotFound";
 import Layout from "@/components/Layout";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="jobs/:id" element={<JobDetail />} />
         <Route path="jobs/:id/edit" element={<JobForm />} />
       </Route>
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
