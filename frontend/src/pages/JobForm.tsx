@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ChangeEvent } from "react";
+import { useEffect, useState, type FormEvent, type ChangeEvent, type FocusEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createJob, getJob, updateJob } from "@/api/jobs";
 import { useToast } from "@/context/ToastContext";
@@ -24,6 +24,8 @@ type FormState = {
   cv_version: string;
   cover_letter_version: string;
 };
+
+type FormErrors = Partial<Record<keyof FormState, string>>;
 
 const EMPTY: FormState = {
   company: "",
@@ -63,11 +65,11 @@ function jobToForm(job: Job): FormState {
 
 function formToPayload(f: FormState): Partial<Job> {
   return {
-    company: f.company,
-    title: f.title,
-    location: f.location,
+    company: f.company.trim(),
+    title: f.title.trim(),
+    location: f.location.trim(),
     remote: f.remote,
-    url: f.url,
+    url: f.url.trim(),
     status: f.status,
     salary_min: f.salary_min ? Number(f.salary_min) : null,
     salary_max: f.salary_max ? Number(f.salary_max) : null,
@@ -75,9 +77,44 @@ function formToPayload(f: FormState): Partial<Job> {
     deadline: f.deadline || null,
     notes: f.notes,
     description: f.description,
-    cv_version: f.cv_version,
-    cover_letter_version: f.cover_letter_version,
+    cv_version: f.cv_version.trim(),
+    cover_letter_version: f.cover_letter_version.trim(),
   };
+}
+
+function validate(f: FormState): FormErrors {
+  const errors: FormErrors = {};
+
+  if (!f.company.trim()) errors.company = "Company is required.";
+  if (!f.title.trim()) errors.title = "Job title is required.";
+
+  if (f.url.trim()) {
+    try {
+      new URL(f.url.trim());
+    } catch {
+      errors.url = "Enter a valid URL (e.g. https://example.com).";
+    }
+  }
+
+  if (f.salary_min && Number(f.salary_min) < 0) {
+    errors.salary_min = "Cannot be negative.";
+  }
+  if (f.salary_max && Number(f.salary_max) < 0) {
+    errors.salary_max = "Cannot be negative.";
+  }
+  if (
+    f.salary_min &&
+    f.salary_max &&
+    Number(f.salary_max) < Number(f.salary_min)
+  ) {
+    errors.salary_max = "Max salary must be at least the minimum.";
+  }
+
+  if (f.date_applied && f.deadline && f.deadline < f.date_applied) {
+    errors.deadline = "Deadline can't be before the applied date.";
+  }
+
+  return errors;
 }
 
 export default function JobForm() {
@@ -87,9 +124,13 @@ export default function JobForm() {
   const { notify } = useToast();
 
   const [form, setForm] = useState<FormState>(EMPTY);
+  const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [serverError, setServerError] = useState("");
+
+  const errors = validate(form);
+  const hasErrors = Object.keys(errors).length > 0;
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -106,9 +147,29 @@ export default function JobForm() {
     }));
   }
 
+  function handleBlur(e: FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
+  }
+
+  function showError(name: keyof FormState): string | undefined {
+    return touched[name] ? errors[name] : undefined;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError("");
+    setServerError("");
+
+    // Touch everything so any remaining errors show
+    setTouched({
+      company: true, title: true, location: true, url: true,
+      salary_min: true, salary_max: true, date_applied: true, deadline: true,
+    });
+
+    if (hasErrors) {
+      notify("Please fix the errors highlighted below.", "error");
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = formToPayload(form);
@@ -118,7 +179,7 @@ export default function JobForm() {
       notify(isEdit ? "Changes saved" : "Job added");
       navigate(`/jobs/${saved.id}`);
     } catch {
-      setError("Something went wrong. Please check your inputs and try again.");
+      setServerError("Something went wrong on the server. Please try again.");
       notify("Save failed", "error");
     } finally {
       setSaving(false);
@@ -133,33 +194,39 @@ export default function JobForm() {
         {isEdit ? "Edit job" : "Add job"}
       </h1>
 
-      {error && (
+      {serverError && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-          {error}
+          {serverError}
         </p>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="bg-white rounded-xl border border-gray-200 p-6 space-y-5"
+      >
         {/* Core fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Company *">
+          <Field label="Company *" error={showError("company")}>
             <input
               name="company"
-              required
               value={form.company}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(!!showError("company"))}
               placeholder="Acme Corp"
+              aria-invalid={!!showError("company")}
             />
           </Field>
-          <Field label="Job title *">
+          <Field label="Job title *" error={showError("title")}>
             <input
               name="title"
-              required
               value={form.title}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(!!showError("title"))}
               placeholder="Software Engineer"
+              aria-invalid={!!showError("title")}
             />
           </Field>
         </div>
@@ -170,12 +237,18 @@ export default function JobForm() {
               name="location"
               value={form.location}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(false)}
               placeholder="New York, NY"
             />
           </Field>
           <Field label="Status">
-            <select name="status" value={form.status} onChange={handleChange} className={inputCls}>
+            <select
+              name="status"
+              value={form.status}
+              onChange={handleChange}
+              className={inputCls(false)}
+            >
               {ALL_STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {s.replace("_", " ")}
@@ -196,14 +269,16 @@ export default function JobForm() {
           Remote position
         </label>
 
-        <Field label="Job posting URL">
+        <Field label="Job posting URL" error={showError("url")}>
           <input
             name="url"
             type="url"
             value={form.url}
             onChange={handleChange}
-            className={inputCls}
+            onBlur={handleBlur}
+            className={inputCls(!!showError("url"))}
             placeholder="https://..."
+            aria-invalid={!!showError("url")}
           />
         </Field>
 
@@ -215,42 +290,49 @@ export default function JobForm() {
               type="date"
               value={form.date_applied}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(false)}
             />
           </Field>
-          <Field label="Application deadline">
+          <Field label="Application deadline" error={showError("deadline")}>
             <input
               name="deadline"
               type="date"
               value={form.deadline}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(!!showError("deadline"))}
+              aria-invalid={!!showError("deadline")}
             />
           </Field>
         </div>
 
         {/* Salary */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Salary min ($)">
+          <Field label="Salary min ($)" error={showError("salary_min")}>
             <input
               name="salary_min"
               type="number"
               min="0"
               value={form.salary_min}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(!!showError("salary_min"))}
               placeholder="60000"
+              aria-invalid={!!showError("salary_min")}
             />
           </Field>
-          <Field label="Salary max ($)">
+          <Field label="Salary max ($)" error={showError("salary_max")}>
             <input
               name="salary_max"
               type="number"
               min="0"
               value={form.salary_max}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(!!showError("salary_max"))}
               placeholder="90000"
+              aria-invalid={!!showError("salary_max")}
             />
           </Field>
         </div>
@@ -262,7 +344,8 @@ export default function JobForm() {
               name="cv_version"
               value={form.cv_version}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(false)}
               placeholder="Resume v3 — backend focus"
             />
           </Field>
@@ -271,7 +354,8 @@ export default function JobForm() {
               name="cover_letter_version"
               value={form.cover_letter_version}
               onChange={handleChange}
-              className={inputCls}
+              onBlur={handleBlur}
+              className={inputCls(false)}
               placeholder="Cover letter v2"
             />
           </Field>
@@ -284,7 +368,7 @@ export default function JobForm() {
             rows={4}
             value={form.notes}
             onChange={handleChange}
-            className={inputCls}
+            className={inputCls(false)}
             placeholder="Referral from Jane, strong culture fit..."
           />
         </Field>
@@ -295,7 +379,7 @@ export default function JobForm() {
             rows={4}
             value={form.description}
             onChange={handleChange}
-            className={inputCls}
+            className={inputCls(false)}
             placeholder="Paste the job description here..."
           />
         </Field>
@@ -322,14 +406,27 @@ export default function JobForm() {
   );
 }
 
-const inputCls =
-  "w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500";
+function inputCls(hasError: boolean): string {
+  const base = "w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2";
+  return hasError
+    ? `${base} border-red-300 focus:ring-red-500 bg-red-50`
+    : `${base} border-gray-300 focus:ring-brand-500`;
+}
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       {children}
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
